@@ -1,50 +1,44 @@
 import argparse
+from pathlib import Path
 
-import numpy as np
+from PIL import Image
 
 from get_mnist import load_mnist
-
-
-def generate_numbers_sequence(digits, spacing_range, image_width):
-    """
-    Generate an image that contains the sequence of given numbers, spaced
-    randomly using an uniform distribution.
-
-    Parameters
-    ----------
-    digits:
-    A list-like containing the numerical values of the digits from which
-        the sequence will be generated (for example [3, 5, 0]).
-    spacing_range:
-    a (minimum, maximum) pair (tuple), representing the min and max spacing
-        between digits. Unit should be pixel.
-    image_width:
-        specifies the width of the image in pixels.
-
-    Returns
-    -------
-    The image containing the sequence of numbers. Images should be represented
-    as floating point 32bits numpy arrays with a scale ranging from 0 (black) to
-    1 (white), the first dimension corresponding to the height and the second
-    dimension to the width.
-    """
-    pass
-
+from num_seq_generator import generate_numbers_sequence
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("sequence", help="Number to be generated", type=int)
-    parser.add_argument("min_spacing", help="Minimum pixel spacing between consecutive digits", type=int)
-    parser.add_argument("max_spacing", help="Maximum pixel spacing between consecutive digits", type=int)
+    parser.add_argument("min_spacing", help="Minimum pixel spacing between consecutive digits (inclusive)", type=int)
+    parser.add_argument("max_spacing", help="Maximum pixel spacing between consecutive digits (exclusive)", type=int)
     parser.add_argument("image_width", help="Pixel width of the generated image", type=int)
+    parser.add_argument("-o", help="Path to load/store MNIST dataset")
     args = parser.parse_args()
 
     if args.min_spacing < 0:
         raise ValueError("Minimum spacing can't be negative")
     if args.max_spacing < 0:
-        raise ValueError("Minimum spacing can't be negative")
+        raise ValueError("Maximum spacing can't be negative")
     if args.image_width < 1:
         raise ValueError("Image width can't be less than 1")
+    if args.max_spacing <= args.min_spacing:
+        raise ValueError("Maximum spacing has to be greater than minimum space")
 
-    generate_numbers_sequence(args.sequence, (args.min_spacing, args.max_spacing), args.image_width)
-    print(load_mnist())
+    out_path = Path(args.o) if args.o is not None else Path("data")
+    if not out_path.exists():
+        out_path.mkdir()
+    if not out_path.is_dir():
+        raise ValueError("Path to MNIST dataset is not a directory")
+
+    sequence = list(map(int, str(args.sequence)))
+    train_imgs, train_labels, _, _ = load_mnist(out_path)
+    img_seq = generate_numbers_sequence(sequence, (args.min_spacing, args.max_spacing), args.image_width, train_imgs,
+                                        train_labels)
+
+    img = train_imgs[-1].astype("float32")
+    print(img.shape, img.min(), img.max(), img.dtype)
+    img.resize((28, 18), resample=Image.BILINEAR)
+    im = Image.fromarray(img)
+    # im = Image.fromarray(img_seq * 255)
+    im = im.convert("L")
+    im.save("test.jpeg")
