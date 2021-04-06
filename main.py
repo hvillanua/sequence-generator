@@ -35,10 +35,6 @@ if __name__ == '__main__':
     img_seq = generate_numbers_sequence(sequence, (args.min_spacing, args.max_spacing), args.image_width, train_imgs,
                                         train_labels)
 
-    img = train_imgs[-1].astype("float32")
-    print(img.shape, img.min(), img.max(), img.dtype)
-    img.resize((28, 18), resample=Image.BILINEAR)
-    im = Image.fromarray(img)
-    # im = Image.fromarray(img_seq * 255)
+    im = Image.fromarray(img_seq * 255)
     im = im.convert("L")
     im.save("test.jpeg")

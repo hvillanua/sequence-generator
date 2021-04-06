@@ -1,4 +1,3 @@
-from pathlib import Path
 from urllib import request
 import gzip
 import pickle
@@ -17,7 +16,9 @@ _mnist_files = [
 
 
 def _download_mnist(data_path):
-    # TODO: add function explanation
+    """
+    Download MNIST dataset files that are not already downloaded.
+    """
     base_url = "http://yann.lecun.com/exdb/mnist/"
     downloaded = False
     for name in _mnist_files:
@@ -31,7 +32,9 @@ def _download_mnist(data_path):
 
 
 def _save_mnist(data_path):
-    # TODO: add function explanation
+    """
+    Compress MNIST dataset into a pickle file.
+    """
     mnist = {}
     for name in _mnist_files[:2]:
         with gzip.open(data_path / name[1], "rb") as f:
@@ -47,7 +50,25 @@ def _save_mnist(data_path):
 
 
 def load_mnist(data_path):
-    # TODO: add function explanation
+    """
+    Download, store and return MNIST dataset.
+
+    Parameters
+    ----------
+    data_path:
+        A path pointing to a valid directory to store the dataset.
+
+    Returns
+    -------
+    train_imgs:
+        Numpy array containing MNIST training images
+    train_labels:
+        Numpy array containing MNIST training labels
+    test_imgs:
+        Numpy array containing MNIST test images
+    test_labels:
+        Numpy array containing MNIST test labels
+    """
     if not data_path.is_dir():
         raise ValueError("Data path is not a directory")
 

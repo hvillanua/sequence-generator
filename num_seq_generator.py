@@ -39,6 +39,8 @@ def generate_numbers_sequence(digits, spacing_range, image_width, data, labels):
     if data.shape[0] != labels.shape[0]:
         raise ValueError(f"Number of samples of data and labels is different. Found {data.shape[0]} samples and "
                          f"{labels.shape[0]} labels")
+    if not set(digits).issubset(set(labels)):
+        raise ValueError("Some of the provided digits do not appear on the dataset")
 
     rng = np.random.default_rng()
     width = data.shape[1]
@@ -48,8 +50,6 @@ def generate_numbers_sequence(digits, spacing_range, image_width, data, labels):
 
     for i, num in enumerate(digits):
         img = rng.choice(data[labels == num], 1, replace=False).reshape(width, height).astype("float32")
-        img = img / 255
-        # print(img.shape, img.min(), img.max(), img.dtype)
         if i == 0:
             img_seq = img
         else:
@@ -57,10 +57,9 @@ def generate_numbers_sequence(digits, spacing_range, image_width, data, labels):
                 img_seq = np.hstack((img_seq, spacing_imgs[i-1], img)).astype("float32")
             else:
                 img_seq = np.hstack((img_seq, img)).astype("float32")
-        # print(img_seq.shape, img_seq.min(), img_seq.max(), img_seq.dtype)
 
-    print(img_seq.shape)
-    # TODO: resize image
-    # img_seq.resize((28, image_width))
-    print(img_seq.shape)
+    im = Image.fromarray(img_seq)
+    im = im.resize((image_width, 28))
+    img_seq = np.array(im) / 255
+    img_seq = img_seq.astype("float32")
     return img_seq
