@@ -6,7 +6,6 @@ from num_seq_generator import generate_numbers_sequence
 
 
 class TestGenerator(unittest.TestCase):
-
     def test_shape(self):
         data = np.zeros((10, 64, 48))
         labels = np.array([i for i in range(10)])
@@ -22,9 +21,12 @@ class TestGenerator(unittest.TestCase):
         expected_array = np.zeros_like(seq)
         # manually fill consecutive diagonals
         for i in range(20):
-            expected_array[i, i] = 1/255
-            expected_array[i, i+20] = 1/255
-        self.assertIsNone(np.testing.assert_array_equal(seq, expected_array), f"Failed to match diagonal sequence")
+            expected_array[i, i] = 1 / 255
+            expected_array[i, i + 20] = 1 / 255
+        self.assertIsNone(
+            np.testing.assert_array_equal(seq, expected_array),
+            f"Failed to match diagonal sequence",
+        )
 
     def test_zero_width(self):
         with self.assertRaises(ValueError):
@@ -51,5 +53,5 @@ class TestGenerator(unittest.TestCase):
             generate_numbers_sequence([], (0, 1), 0, data, labels)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

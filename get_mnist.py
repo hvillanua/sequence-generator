@@ -1,3 +1,4 @@
+from pathlib import Path
 from urllib import request
 import gzip
 import pickle
@@ -11,11 +12,11 @@ _mnist_files = [
     ["training_images", "train-images-idx3-ubyte.gz"],
     ["test_images", "t10k-images-idx3-ubyte.gz"],
     ["training_labels", "train-labels-idx1-ubyte.gz"],
-    ["test_labels", "t10k-labels-idx1-ubyte.gz"]
+    ["test_labels", "t10k-labels-idx1-ubyte.gz"],
 ]
 
 
-def _download_mnist(data_path):
+def _download_mnist(data_path: Path) -> None:
     """
     Download MNIST dataset files that are not already downloaded.
     """
@@ -31,14 +32,16 @@ def _download_mnist(data_path):
         print("Download complete.")
 
 
-def _save_mnist(data_path):
+def _save_mnist(data_path: Path):
     """
     Compress MNIST dataset into a pickle file.
     """
     mnist = {}
     for name in _mnist_files[:2]:
         with gzip.open(data_path / name[1], "rb") as f:
-            mnist[name[0]] = np.frombuffer(f.read(), np.uint8, offset=16).reshape(-1, 28, 28)
+            mnist[name[0]] = np.frombuffer(f.read(), np.uint8, offset=16).reshape(
+                -1, 28, 28
+            )
 
     for name in _mnist_files[-2:]:
         with gzip.open(data_path / name[1], "rb") as f:
@@ -49,7 +52,7 @@ def _save_mnist(data_path):
     print("Save complete.")
 
 
-def load_mnist(data_path):
+def load_mnist(data_path: Path):
     """
     Download, store and return MNIST dataset.
 
@@ -79,4 +82,9 @@ def load_mnist(data_path):
     with open(mnist_pkl, "rb") as f:
         mnist = pickle.load(f)
 
-    return mnist["training_images"], mnist["training_labels"], mnist["test_images"], mnist["test_labels"]
+    return (
+        mnist["training_images"],
+        mnist["training_labels"],
+        mnist["test_images"],
+        mnist["test_labels"],
+    )

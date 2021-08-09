@@ -1,9 +1,17 @@
+from typing import List, Tuple
+
 import numpy as np
 from PIL import Image
 
 
 # changed function signature slightly for performance
-def generate_numbers_sequence(digits, spacing_range, image_width, data, labels):
+def generate_numbers_sequence(
+    digits: List,
+    spacing_range: Tuple,
+    image_width: int,
+    data: np.ndarray,
+    labels: np.ndarray,
+) -> np.ndarray:
     """
     Generate an image that contains the sequence of given numbers, spaced
     randomly using an uniform distribution.
@@ -32,13 +40,19 @@ def generate_numbers_sequence(digits, spacing_range, image_width, data, labels):
     dimension to the width.
     """
     if len(data.shape) != 3:
-        raise ValueError(f"Wrong number of dimensions. Expected 3 dimensions [n_samples, width, height], "
-                         f"found {len(data.shape)}")
+        raise ValueError(
+            f"Wrong number of dimensions. Expected 3 dimensions [n_samples, width, height], "
+            f"found {len(data.shape)}"
+        )
     if len(labels.shape) != 1:
-        raise ValueError(f"Wrong number of dimensions. Expected 1 dimension [n_samples], found {len(labels.shape)}")
+        raise ValueError(
+            f"Wrong number of dimensions. Expected 1 dimension [n_samples], found {len(labels.shape)}"
+        )
     if data.shape[0] != labels.shape[0]:
-        raise ValueError(f"Number of samples of data and labels is different. Found {data.shape[0]} samples and "
-                         f"{labels.shape[0]} labels")
+        raise ValueError(
+            f"Number of samples of data and labels is different. Found {data.shape[0]} samples and "
+            f"{labels.shape[0]} labels"
+        )
     if not set(digits).issubset(set(labels)):
         raise ValueError("Some of the provided digits do not appear on the dataset")
 
@@ -46,19 +60,28 @@ def generate_numbers_sequence(digits, spacing_range, image_width, data, labels):
     width = data.shape[1]
     height = data.shape[2]
     spacing = rng.integers(spacing_range[0], spacing_range[1], len(digits) - 1)
-    spacing_imgs = [np.zeros((28, space)) if space != 0 else None for space in spacing]
+    spacing_imgs = [
+        np.zeros((28, space)).astype("float32") if space != 0 else None
+        for space in spacing
+    ]
+    img_seq = []
 
     for i, num in enumerate(digits):
-        img = rng.choice(data[labels == num], 1, replace=False).reshape(width, height).astype("float32")
+        img = (
+            rng.choice(data[labels == num], 1, replace=False)
+            .reshape(width, height)
+            .astype("float32")
+        )
         if i == 0:
-            img_seq = img
+            img_seq.append(img)
         else:
-            if spacing_imgs[i-1] is not None:
-                img_seq = np.hstack((img_seq, spacing_imgs[i-1], img)).astype("float32")
+            if spacing_imgs[i - 1] is not None:
+                img_seq.extend([spacing_imgs[i - 1], img])
             else:
-                img_seq = np.hstack((img_seq, img)).astype("float32")
+                img_seq.append(img)
 
-    im = Image.fromarray(img_seq)
+    final_image = np.hstack(img_seq).astype("float32")
+    im = Image.fromarray(final_image)
     im = im.resize((image_width, 28))
     img_seq = np.array(im) / 255
     img_seq = img_seq.astype("float32")
