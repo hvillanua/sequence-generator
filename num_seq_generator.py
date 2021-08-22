@@ -59,7 +59,7 @@ def generate_numbers_sequence(
     rng = np.random.default_rng()
     width = data.shape[1]
     height = data.shape[2]
-    spacing = rng.integers(spacing_range[0], spacing_range[1], len(digits) - 1)
+    spacing = rng.integers(spacing_range[0], spacing_range[1] + 1, len(digits) - 1)
     spacing_imgs = [
         np.zeros((28, space)).astype("float32") if space != 0 else None
         for space in spacing
