@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
     sequence = list(map(int, args.sequence))
     train_imgs, train_labels, _, _ = load_mnist(out_path)
-    img_seq = generate_numbers_sequence(
+    number_sequence_image = generate_numbers_sequence(
         sequence,
         (args.min_spacing, args.max_spacing),
         args.image_width,
@@ -51,6 +51,6 @@ if __name__ == "__main__":
         train_labels,
     )
 
-    im = Image.fromarray(img_seq * 255)
+    im = Image.fromarray(number_sequence_image * 255)
     im = im.convert("L")
     im.save("test.jpeg")

@@ -43,14 +43,13 @@ def sanitize_input(
 
 
 def sanitize_query_string(args: Dict[str, str]) -> Tuple[List[int], int, int, int]:
-    aux = args.get("sequence")
     sequence = sanitize_input(
         args.get("sequence"),
         lambda x: list(map(int, x)),
         "Sequence",
         [
             random.randint(0, 9)
-            for i in range(random.randint(DEFAULT_MIN_SEQ_LEN, DEFAULT_MAX_SEQ_LEN))
+            for _ in range(random.randint(DEFAULT_MIN_SEQ_LEN, DEFAULT_MAX_SEQ_LEN))
         ],
     )
 
@@ -96,7 +95,7 @@ def validate_generation_input(
         raise ValueError(
             f"Wrong maximum spacing. Limits are [{MIN_SPACING}, {MAX_SPACING}]"
         )
-    if not (min_spacing <= max_spacing):
+    if min_spacing > max_spacing:
         raise ValueError(
             "Maximum spacing has to be greater or equal than minimum space"
         )
@@ -121,14 +120,14 @@ def generate_number():
         )
         validate_generation_input(sequence, min_spacing, max_spacing, image_width)
 
-        img_seq = generate_numbers_sequence(
+        number_sequence_image = generate_numbers_sequence(
             sequence,
             (min_spacing, max_spacing),
             image_width,
             train_imgs,
             train_labels,
         )
-        im = Image.fromarray(img_seq * 255)
+        im = Image.fromarray(number_sequence_image * 255)
         im = im.convert("L")
         return serve_pil_image(im)
 
@@ -144,5 +143,5 @@ if __name__ == "__main__":
         raise ValueError("Path to MNIST dataset is not a directory")
 
     train_imgs, train_labels, _, _ = load_mnist(out_path)
-    serve(app, host="127.0.0.1", port=5000)
-    # app.run(port=5000)
+    serve(app, host="0.0.0.0", port=5000)
+    # app.run(host="0.0.0.0", port=5000, debug=True)

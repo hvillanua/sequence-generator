@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import Iterable, Tuple
 
 import numpy as np
 from PIL import Image
@@ -6,7 +6,7 @@ from PIL import Image
 
 # changed function signature slightly for performance
 def generate_numbers_sequence(
-    digits: List,
+    digits: Iterable[int],
     spacing_range: Tuple,
     image_width: int,
     data: np.ndarray,
@@ -39,6 +39,35 @@ def generate_numbers_sequence(
     1 (white), the first dimension corresponding to the height and the second
     dimension to the width.
     """
+
+    _is_valid_input_arguments(digits, data, labels)
+
+    rng = np.random.default_rng()
+    spacing = rng.integers(spacing_range[0], spacing_range[1] + 1, len(digits) - 1)
+    spacing_imgs = [
+        np.zeros((28, space)).astype("float32") if space != 0 else None
+        for space in spacing
+    ]
+
+    img_seq = []
+    width = data.shape[1]
+    height = data.shape[2]
+    for i, label in enumerate(digits):
+        random_image_from_label = rng.choice(data[labels == label], 1, replace=False)
+        formatted_image = random_image_from_label.reshape(width, height).astype(
+            "float32"
+        )
+        if i != 0 and spacing_imgs[i - 1] is not None:
+            img_seq.extend([spacing_imgs[i - 1], formatted_image])
+        else:
+            img_seq.append(formatted_image)
+
+    return _concatenate_images(img_seq, image_width)
+
+
+def _is_valid_input_arguments(
+    digits: Iterable[int], data: np.ndarray, labels: np.ndarray
+):
     if len(data.shape) != 3:
         raise ValueError(
             f"Wrong number of dimensions. Expected 3 dimensions [n_samples, width, height], "
@@ -56,33 +85,10 @@ def generate_numbers_sequence(
     if not set(digits).issubset(set(labels)):
         raise ValueError("Some of the provided digits do not appear on the dataset")
 
-    rng = np.random.default_rng()
-    width = data.shape[1]
-    height = data.shape[2]
-    spacing = rng.integers(spacing_range[0], spacing_range[1] + 1, len(digits) - 1)
-    spacing_imgs = [
-        np.zeros((28, space)).astype("float32") if space != 0 else None
-        for space in spacing
-    ]
-    img_seq = []
 
-    for i, num in enumerate(digits):
-        img = (
-            rng.choice(data[labels == num], 1, replace=False)
-            .reshape(width, height)
-            .astype("float32")
-        )
-        if i == 0:
-            img_seq.append(img)
-        else:
-            if spacing_imgs[i - 1] is not None:
-                img_seq.extend([spacing_imgs[i - 1], img])
-            else:
-                img_seq.append(img)
-
+def _concatenate_images(img_seq: Iterable[np.ndarray], width: int) -> np.ndarray:
     final_image = np.hstack(img_seq).astype("float32")
-    im = Image.fromarray(final_image)
-    im = im.resize((image_width, 28))
-    img_seq = np.array(im) / 255
-    img_seq = img_seq.astype("float32")
-    return img_seq
+    resized_image = Image.fromarray(final_image)
+    resized_image = resized_image.resize((width, 28))
+    normalized_image = np.array(resized_image) / 255
+    return normalized_image.astype("float32")
